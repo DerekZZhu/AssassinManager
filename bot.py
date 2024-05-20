@@ -25,7 +25,7 @@ async def report(ctx, *, arg):
     reporter = ctx.message.author.name
 
     if ctx.message.author.id in dead:
-        await ctx.send("You are dead. You're not allowed to report...")
+        await ctx.send("Ur dead 💀. How do u expect to kill? Wait until respawn")
         return
     
     mentioned_users = [user.mention for user in ctx.message.mentions]
@@ -48,7 +48,7 @@ async def report(ctx, *, arg):
                      f"Time: {report_time}\n" \
                      f"Reporter: {reporter}\n" \
                      f"Reported User: {reported_user}\n" \
-                     f"Details: {arg}"
+                     #f"Details: {arg}"
 
     reports.append({"time": report_time, "victim":reported_user, "victim_id": ctx.message.mentions[0].id})
     dead.add(ctx.message.mentions[0].id)
