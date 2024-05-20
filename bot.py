@@ -75,8 +75,13 @@ async def register(ctx):
     user_id = ctx.message.author.id
     username = ctx.message.author.name
     
-    supabase.table('Players').insert({"id": user_id, "name": username, "kills":0, "deaths":0, "title":""}).execute()
-    await ctx.send(f"User {username} with ID {user_id} has been registered.")
+    try:
+        supabase.table('Players').insert({"id": user_id, "name": username, "kills":0, "deaths":0, "title":""}).execute()
+        await ctx.send(f"User {username} with ID {user_id} has been registered.")
+        
+    except:
+        await ctx.send(f"You are already registered! Type !profile to check your profile")
+    
 
 
 @client.command()
