@@ -24,13 +24,16 @@ async def report(ctx, *, arg):
     report_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     reporter = ctx.message.author.name
 
-    print(dead)
     if ctx.message.author.id in dead:
         await ctx.send("You are dead. You're not allowed to report...")
         return
     
     mentioned_users = [user.mention for user in ctx.message.mentions]
     
+    if ctx.message.mentions[0].id == ctx.message.author.id:
+        await ctx.send("You cannot report yourself.")
+        return
+
     if mentioned_users:
         reported_user = mentioned_users[0]
     else:
