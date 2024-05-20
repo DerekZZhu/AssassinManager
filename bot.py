@@ -67,6 +67,7 @@ async def check_reports():
             user = await client.fetch_user(victim_id)
             await user.send("It has been 5 minutes since your death. You have respawned.")
             reports.remove(report)
+            dead.remove(victim_id)
 
 
 
