@@ -11,6 +11,7 @@ supabase: Client = create_client(sb_url, sb_secret_key)
 client = commands.Bot(command_prefix="!", intents=intents)
 
 reports = []
+dead = {"test"}
 
 @client.event
 async def on_ready():
@@ -22,6 +23,12 @@ async def on_ready():
 async def report(ctx, *, arg):
     report_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     reporter = ctx.message.author.name
+
+    print(dead)
+    if ctx.message.author.id in dead:
+        await ctx.send("You are dead. You're not allowed to report...")
+        return
+    
     mentioned_users = [user.mention for user in ctx.message.mentions]
     
     if mentioned_users:
@@ -37,6 +44,7 @@ async def report(ctx, *, arg):
                      f"Details: {arg}"
 
     reports.append({"time": report_time, "victim":reported_user, "victim_id": ctx.message.mentions[0].id})
+    dead.add(ctx.message.mentions[0].id)
     print(reports)
     await ctx.send(report_message)
 
@@ -47,7 +55,7 @@ async def check_reports():
     print("Checking Reports")
     for report in reports[:]:
         report_time = datetime.strptime(report["time"], '%Y-%m-%d %H:%M:%S')
-        if current_time >= report_time + timedelta(minute=5):
+        if current_time >= report_time + timedelta(minutes=5):
             victim_id = report["victim_id"]
             user = await client.fetch_user(victim_id)
             await user.send("It has been 5 minutes since your death. You have respawned.")
