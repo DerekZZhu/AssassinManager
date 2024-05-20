@@ -29,9 +29,13 @@ async def report(ctx, *, arg):
         return
     
     mentioned_users = [user.mention for user in ctx.message.mentions]
-    
+
     if ctx.message.mentions[0].id == ctx.message.author.id:
         await ctx.send("You cannot report yourself.")
+        return
+    
+    if ctx.message.mentions[0].id in dead:
+        await ctx.send("That user is currently dead. Stop trolling.")
         return
 
     if mentioned_users:
