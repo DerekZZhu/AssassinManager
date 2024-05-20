@@ -75,7 +75,7 @@ async def register(ctx):
     user_id = ctx.message.author.id
     username = ctx.message.author.name
     
-    supabase.table('Players').insert({"id": user_id, "name": username, "kills":0, "quote":""}).execute()
+    supabase.table('Players').insert({"id": user_id, "name": username, "kills":0, "deaths":0, "title":""}).execute()
     await ctx.send(f"User {username} with ID {user_id} has been registered.")
 
 
@@ -83,5 +83,33 @@ async def register(ctx):
 async def test(ctx, arg):
     await ctx.send(arg)
 
+
+
+@client.command()
+async def profile(ctx, user: discord.User = None):
+    mentioned_users = ctx.message.mentions
+    if mentioned_users:
+        user = mentioned_users[0]
+    else:
+        user = ctx.message.author
+
+    user_id = user.id
+    response = supabase.table('Players').select('*').eq('id', str(user_id)).execute()
+    
+    if not response.data:
+        await ctx.send("User statistics not found or user is not registered.")
+        return
+    
+    user_data = response.data[0]
+    # print(user_data)
+    u_img = user.avatar.url if user_data["image"] == None else user_data["image"]
+    embed = discord.Embed(title="User Profile", color=0x00ff00)
+    embed.set_thumbnail(url=u_img)
+    embed.add_field(name="Name", value=user_data.get("name", "Unknown"))
+    embed.add_field(name="Number of Kills", value=user_data.get("kills", "0"))
+    embed.add_field(name="Number of Deaths", value=user_data.get("deaths", "0"))
+    embed.add_field(name="Title", value=user_data.get("title", "Unassigned"))
+    embed.set_footer(text=f"Requested by {ctx.message.author.name}")
+    await ctx.send(embed=embed)
 
 client.run(auth_token)
