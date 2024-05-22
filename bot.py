@@ -94,7 +94,7 @@ async def register(interaction: discord.Interaction, team_name: str, agent_name:
         return 
 
     try:
-        supabase.table('Players').insert({"id": user_id, "name": username, "kills":0, "deaths":0, "title":"", "points":0, "team":team_id, "streak":0}).execute()
+        supabase.table('Players').insert({"id": user_id, "name": username, "kills":0, "deaths":0, "title":{agent_name}, "points":0, "team":team_id, "streak":0}).execute()
         await interaction.response.send_message(f"Registered {username} as **{agent_name}** on team **{team_name}** (ID: {team_id})")
     except:
         await interaction.response.send_message(f"You are already registered! Type !profile to check your profile", ephemeral=True)
@@ -118,13 +118,27 @@ async def profile(interaction: discord.Interaction, user: discord.User = None):
         return
     
     user_data = response.data[0]
+
+    team = ""
+    if user_data['team'] == 1:
+        team = "Framework"
+        color = 0xF39C12
+    elif user_data['team'] == 2:
+        team = "Database"
+        color = 0xF1C40F
+    elif user_data['team'] == 3:
+        team = "ML"
+        color = 0x27AE60
+
     u_img = user.avatar.url if user_data["image"] == None else user_data["image"]
-    embed = discord.Embed(title="User Profile", color=0x00ff00)
+    embed = discord.Embed(title="User Profile", color=color)
     embed.set_thumbnail(url=u_img)
     embed.add_field(name="Name", value=user_data.get("name", "Unknown"))
     embed.add_field(name="Number of Kills", value=user_data.get("kills", "0"))
     embed.add_field(name="Number of Deaths", value=user_data.get("deaths", "0"))
     embed.add_field(name="Title", value=user_data.get("title", "Unassigned"))
+    embed.add_field(name="Points", value=user_data.get("points", "0"))
+    embed.add_field(name="Team", value=team)
     embed.set_footer(text=f"Requested by {interaction.user.name}")
     await interaction.response.send_message(embed=embed)
 
