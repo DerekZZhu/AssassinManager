@@ -53,12 +53,32 @@ async def report(interaction: discord.Interaction, user: discord.User):
     dead.add(user.id)
     print(reports)
 
-    # supabase update
-    data, count = supabase.table('Player').update({'deaths': 1}).eq('id', str(user.id)).execute()
+    # Get killer and victim data
+    victim_response = supabase.table('Players').select('*').eq('id', str(user.id)).execute()
+    killer_response = supabase.table('Players').select('*').eq('id', str(interaction.user.id)).execute()
+    
+    if not victim_response.data or not killer_response.data:
+        await interaction.response.send_message("Either you are not registered or the reported user doesn't exist.", ephemeral=True)
+        return
+    
+    victim_data = victim_response.data[0]
+    killer_data = killer_response.data[0]
 
-    # TODO: Update points and streak
-    _, _ =supabase.table('Player').update({'kills': 1}).eq('id', str(interaction.user.id)).execute()
-    response = supabase.rpc("increment_kills", {"user_id": str(interaction.user.id), "increment_value": 2}).execute()
+    victim_killstreak = victim_data.get("killstreak", 0)
+    victim_deaths = victim_data.get("deaths", 0)
+    killer_killstreak = killer_data.get("killstreak", 0)
+    killer_points = killer_data.get("points", 0)
+    killer_kills = killer_data.get("kills", 0)
+
+    # Update killer and victim stats
+    killer_new_points = killer_points + max(killer_killstreak + 2, 5) + (victim_killstreak + 2 if victim_killstreak >= 2 else 0)
+    supabase.table('Player').update(
+        {'deaths': victim_deaths + 1, 'killstreak': 0}
+    ).eq('id', str(user.id)).execute()
+    supabase.table('Player').update(
+        {'kills': killer_kills + 1, 'killstreak': killer_killstreak + 1, 'points': killer_new_points}
+    ).eq('id', str(interaction.user.id)).execute()
+
     await interaction.response.send_message(report_message)
 
 
@@ -90,11 +110,21 @@ async def register(interaction: discord.Interaction, team_name: str, agent_name:
     elif team_name.lower() == "ml":
         team_id = 3
     else:
-        await interaction.response.send_message("Team doesn't exist. Try again?", ephemeral=True)
+        await interaction.response.send_message("Team doesn't exist. The valid teams are 'Framework', 'Database', and 'ML'. Try again?", ephemeral=True)
         return 
 
     try:
-        supabase.table('Players').insert({"id": user_id, "name": username, "kills":0, "deaths":0, "title":{agent_name}, "points":0, "team":team_id, "streak":0}).execute()
+        supabase.table('Players').insert({
+            "id": user_id,
+            "name": username,
+            "kills": 0,
+            "deaths": 0,
+            "killstreak": 0,
+            "title": {agent_name},
+            "points": 0,
+            "team": team_id,
+            "streak": 0
+        }).execute()
         await interaction.response.send_message(f"Registered {username} as **{agent_name}** on team **{team_name}** (ID: {team_id})")
     except:
         await interaction.response.send_message(f"You are already registered! Type !profile to check your profile", ephemeral=True)
@@ -136,6 +166,7 @@ async def profile(interaction: discord.Interaction, user: discord.User = None):
     embed.add_field(name="Name", value=user_data.get("name", "Unknown"))
     embed.add_field(name="Number of Kills", value=user_data.get("kills", "0"))
     embed.add_field(name="Number of Deaths", value=user_data.get("deaths", "0"))
+    embed.add_field(name="Current Killstreak", value=user_data.get("killstreak", "0"))
     embed.add_field(name="Title", value=user_data.get("title", "Unassigned"))
     embed.add_field(name="Points", value=user_data.get("points", "0"))
     embed.add_field(name="Team", value=team)
