@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
+from discord.ui import Button, View
 from SECRET import client_secret, auth_token, sb_url, sb_secret_key
 from supabase import create_client, Client
 from datetime import datetime, timedelta
@@ -54,7 +55,7 @@ async def report(interaction: discord.Interaction, user: discord.User):
 
     # supabase update
     data, count = supabase.table('Player').update({'deaths': 1}).eq('id', str(user.id)).execute()
-    
+
     # TODO: Update points and streak
     _, _ =supabase.table('Player').update({'kills': 1}).eq('id', str(interaction.user.id)).execute()
     response = supabase.rpc("increment_kills", {"user_id": str(interaction.user.id), "increment_value": 2}).execute()
@@ -73,6 +74,7 @@ async def check_reports():
             await user.send("It has been 1 hour since your death. You have respawned.")
             reports.remove(report)
             dead.remove(victim_id)
+
 
 @client.tree.command(name="register")
 @app_commands.describe(team_name="The name of the team", agent_name="The name of the agent")
@@ -127,8 +129,37 @@ async def profile(interaction: discord.Interaction, user: discord.User = None):
     await interaction.response.send_message(embed=embed)
 
 
+
+class LeaderboardView(View):
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+
+    @discord.ui.button(label="Kills", style=discord.ButtonStyle.primary, custom_id="sort_kills")
+    async def sort_kills(self, interaction: discord.Interaction, button: Button):
+        self.data.sort(key=lambda x: x['kills'], reverse=True)
+        embed = create_leaderboard_embed(self.data)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Points", style=discord.ButtonStyle.primary, custom_id="sort_points")
+    async def sort_points(self, interaction: discord.Interaction, button: Button):
+        self.data.sort(key=lambda x: x['points'], reverse=True)
+        embed = create_leaderboard_embed(self.data)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+def create_leaderboard_embed(data):
+    embed = discord.Embed(title="Leaderboard", color=0x00ff00)
+    for idx, player in enumerate(data):
+        embed.add_field(name=f"{idx+1}. {player['name']}", value=f"Kills: {player['kills']} | Points: {player['points']}", inline=False)
+    return embed
+
 @client.tree.command(name="leaderboard")
 async def leaderboard(interaction: discord.Interaction):
-    return
+    response = supabase.table('Players').select('*').execute()
+    data = response.data if response.data else []
+    view = LeaderboardView(data)
+    embed = create_leaderboard_embed(data)
+    await interaction.response.send_message(embed=embed, view=view)
+
 
 client.run(auth_token)
