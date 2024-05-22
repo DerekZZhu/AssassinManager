@@ -51,6 +51,13 @@ async def report(interaction: discord.Interaction, user: discord.User):
     reports.append({"time": report_time, "victim": user.mention, "victim_id": user.id})
     dead.add(user.id)
     print(reports)
+
+    # supabase update
+    data, count = supabase.table('Player').update({'deaths': 1}).eq('id', str(user.id)).execute()
+    
+    # TODO: Update points and streak
+    _, _ =supabase.table('Player').update({'kills': 1}).eq('id', str(interaction.user.id)).execute()
+    response = supabase.rpc("increment_kills", {"user_id": str(interaction.user.id), "increment_value": 2}).execute()
     await interaction.response.send_message(report_message)
 
 
@@ -90,9 +97,9 @@ async def register(interaction: discord.Interaction, team_name: str, agent_name:
     except:
         await interaction.response.send_message(f"You are already registered! Type !profile to check your profile", ephemeral=True)
 
-@client.command()
-async def test(ctx, arg):
-    await ctx.send(arg)
+# @client.command()
+# async def test(ctx, arg):
+#     await ctx.send(arg)
 
 
 @client.tree.command(name="profile")
@@ -119,5 +126,9 @@ async def profile(interaction: discord.Interaction, user: discord.User = None):
     embed.set_footer(text=f"Requested by {interaction.user.name}")
     await interaction.response.send_message(embed=embed)
 
+
+@client.tree.command(name="leaderboard")
+async def leaderboard(interaction: discord.Interaction):
+    return
 
 client.run(auth_token)
