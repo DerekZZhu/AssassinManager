@@ -131,7 +131,7 @@ async def check_reports():
     print("Checking Reports")
     for report in reports[:]:
         report_time = datetime.strptime(report["time"], '%Y-%m-%d %H:%M:%S')
-        if current_time >= report_time + timedelta(minutes=5):
+        if current_time >= report_time + timedelta(hours=1):
             victim_id = report["victim_id"]
             user = await client.fetch_user(victim_id)
             await user.send("It has been 1 hour since your death. You have respawned.")
