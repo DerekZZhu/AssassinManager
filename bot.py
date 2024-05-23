@@ -57,6 +57,11 @@ async def register(ctx, team_name: str, agent_name: str):
     await ctx.send(f"Registered {username} as **{agent_name}** on team **{team_name}** (ID: {team_id})")
 
 
+@register.error
+async def register_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Error: You need to provide both team_name and agent_name arguments. Usage: `!register <team_name> <agent_name>`")
+
 @client.command()
 async def report(ctx, *, arg):
     print("Report fired")
