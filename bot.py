@@ -22,6 +22,7 @@ async def on_ready():
 
 @client.command()
 async def register(ctx, team_name: str, agent_name: str):
+    print("Register called")
     user_id = ctx.message.author.id
     username = ctx.message.author.name
     
@@ -58,6 +59,7 @@ async def register(ctx, team_name: str, agent_name: str):
 
 @client.command()
 async def report(ctx, *, arg):
+    print("Report fired")
     report_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     reporter = ctx.message.author.name
 
@@ -134,6 +136,7 @@ async def check_reports():
 
 @client.command()
 async def dead(ctx):
+    print("Checking dead")
     embed = discord.Embed(title="Dead Users", color=0xFF0000)
     current_time = datetime.now()
 
@@ -153,7 +156,7 @@ async def dead(ctx):
 
 
 @client.command()
-async def test(ctx, *, arg):
+async def rules(ctx, *, arg):
     await ctx.send(arg)
 
 
@@ -229,7 +232,7 @@ async def leaderboard(ctx):
 
 
 @client.command()
-async def anon(ctx, *, message: str):
+async def whisper(ctx, *, message: str):
     if isinstance(ctx.channel, discord.DMChannel):
         print(client.guilds)
         guild = discord.utils.get(client.guilds)
