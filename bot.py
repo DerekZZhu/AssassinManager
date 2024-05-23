@@ -122,7 +122,7 @@ async def report(ctx, *, arg):
 
     #print(killer_kills)
 
-    killer_new_points = killer_points + max(killer_killstreak + 2, 5) + (victim_killstreak + 2 if victim_killstreak >= 2 else 0)
+    killer_new_points = killer_points + min(killer_killstreak + 2, 5) + (victim_killstreak + 2 if victim_killstreak >= 2 else 0)
     #print(killer_points)
     victim_deaths += 1
     supabase.table('Players').update({'deaths': victim_deaths, 'killstreak': 0}).eq('id', mentioned_user.id).execute()
@@ -140,7 +140,7 @@ async def check_reports():
     print("Checking Reports")
     for report in reports[:]:
         report_time = datetime.strptime(report["time"], '%Y-%m-%d %H:%M:%S')
-        if current_time >= report_time + timedelta(minutes=1):
+        if current_time >= report_time + timedelta(hours=1):
             victim_id = report["victim_id"]
             user = await client.fetch_user(victim_id)
             await user.send("It has been 1 hour since your death. You have respawned.")
