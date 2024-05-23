@@ -13,10 +13,17 @@ client = commands.Bot(command_prefix="!", intents=intents)
 
 reports = []
 dead_players = {"test"}  # Assuming 'test' is a username or ID
+response = supabase.table('Reports').select("*").execute()
+for report in response.data:
+    print(report)
+    reports.append({"time": report["time"], "victim_id": report["id"]})
+    dead_players.add(report["id"])
 
 @client.event
 async def on_ready():
     print(f'Bot is ready. Logged in as {client.user}')
+
+    
     check_reports.start()
 
 
@@ -66,6 +73,7 @@ async def register_error(ctx, error):
 async def report(ctx, *, arg):
     print("Report fired")
     report_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(type(report_time))
     reporter = ctx.message.author.name
 
     if ctx.message.author.id in dead_players:
@@ -122,6 +130,7 @@ async def report(ctx, *, arg):
     killer_killstreak += 1
     supabase.table('Players').update({'kills': killer_kills, 'killstreak': killer_killstreak, 'points': killer_new_points}).eq('id', ctx.message.author.id).execute()
 
+    supabase.table('Reports').insert({'id': mentioned_user.id, 'time':report_time}).execute()
     await ctx.send(report_message)
 
 
@@ -131,12 +140,20 @@ async def check_reports():
     print("Checking Reports")
     for report in reports[:]:
         report_time = datetime.strptime(report["time"], '%Y-%m-%d %H:%M:%S')
-        if current_time >= report_time + timedelta(hours=1):
+        if current_time >= report_time + timedelta(minutes=1):
             victim_id = report["victim_id"]
             user = await client.fetch_user(victim_id)
             await user.send("It has been 1 hour since your death. You have respawned.")
             reports.remove(report)
+
+            try:
+                supabase.table('Reports').delete().eq('id', victim_id).execute()
+                print("report successfully deleted")
+            except:
+                pass
+
             dead_players.remove(victim_id)
+
 
 
 @client.command()
@@ -152,10 +169,10 @@ async def dead(ctx):
         
         if time_left.total_seconds() > 0:
             user = await client.fetch_user(victim_id)
-            # time_left_str = str(time_left).split('.')[0]
-            embed.add_field(name="Name", value=f"{user.name}", inline=True)
             respawn_time = report_time + timedelta(hours=1)
-            embed.add_field(name="Respawn Time", value=f"<t:{int(respawn_time.timestamp())}:R>", inline=True)
+            time_left_str = str(time_left).split('.')[0]
+            embed.add_field(name=f"{user.name}", value=f"Respawn Time: <t:{int(respawn_time.timestamp())}:R> (Time left: {time_left_str})", inline=True)
+
 
     await ctx.send(embed=embed)
 
@@ -236,7 +253,7 @@ class LeaderboardView(View):
 def create_leaderboard_embed(data):
     embed = discord.Embed(title="Leaderboard", color=0x00ff00)
     for idx, player in enumerate(data):
-        embed.add_field(name=f"{idx+1}. {player['name']}", value=f"Kills: {player['kills']} | Points: {player['points']}", inline=False)
+        embed.add_field(name=f"{idx+1}. {player['name']}", value=f"Kills: {player['kills']} | Deaths: {player['deaths']} | Points: {player['points']}", inline=False)
     return embed
 
 @client.command(name="leaderboard")
