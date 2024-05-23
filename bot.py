@@ -161,6 +161,18 @@ async def dead(ctx):
 
 
 @client.command()
+async def man(ctx):
+    embed = discord.Embed(title="Command List", color=0x00ff00)
+    embed.add_field(name="!register <team_name> <agent_name>", value="Register for the game", inline=False)
+    embed.add_field(name="!report <player>", value="Make a report of a killing", inline=False)
+    embed.add_field(name="!dead", value="Get a list of all dead players", inline=False)
+    embed.add_field(name="!profile", value="Get your player profile", inline=False)
+    embed.add_field(name="!leaderboard", value="Get the leaderboard", inline=False)
+    embed.add_field(name="!tip", value="[ONLY USABLE IN DM] Anonymously tip", inline=False)
+    embed.add_field(name="Have fun!", value="Enjoy the game!", inline=False)
+    await ctx.send(embed=embed)
+    
+@client.command()
 async def rules(ctx, *, arg):
     await ctx.send(arg)
 
@@ -237,7 +249,7 @@ async def leaderboard(ctx):
 
 
 @client.command()
-async def whisper(ctx, *, message: str):
+async def tip(ctx, *, message: str):
     if isinstance(ctx.channel, discord.DMChannel):
         print(client.guilds)
         guild = discord.utils.get(client.guilds)
