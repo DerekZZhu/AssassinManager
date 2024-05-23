@@ -153,7 +153,7 @@ async def dead(ctx):
         if time_left.total_seconds() > 0:
             user = await client.fetch_user(victim_id)
             # time_left_str = str(time_left).split('.')[0]
-            embed.add_field(name=user.name, inline=False)
+            embed.add_field(name="Name", value=f"{user.name}", inline=True)
             respawn_time = report_time + timedelta(hours=1)
             embed.add_field(name="Respawn Time", value=f"<t:{int(respawn_time.timestamp())}:R>", inline=True)
 
