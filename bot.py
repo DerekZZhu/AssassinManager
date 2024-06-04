@@ -171,7 +171,7 @@ async def dead(ctx):
             user = await client.fetch_user(victim_id)
             respawn_time = report_time + timedelta(hours=1)
             time_left_str = str(time_left).split('.')[0]
-            embed.add_field(name=f"{user.name}", value=f"Respawn Time: <t:{int(respawn_time.timestamp())}:R> (Time left: {time_left_str})", inline=True)
+            embed.add_field(name=f"{user.name}", value=f"Respawn Time: <t:{int(respawn_time.timestamp())}:R> (Time left: {time_left_str})", inline=False)
 
 
     await ctx.send(embed=embed)
@@ -258,7 +258,7 @@ def create_leaderboard_embed(data):
 
 @client.command(name="leaderboard")
 async def leaderboard(ctx):
-    response = supabase.table('Players').select('*').execute()
+    response = supabase.table('Players').select('*').order('points', desc=True).execute()
     data = response.data if response.data else []
     view = LeaderboardView(data)
     embed = create_leaderboard_embed(data)
@@ -279,5 +279,13 @@ async def tip(ctx, *, message: str):
             await ctx.send("Could not find the specified channel in the server.")
     else:
         await ctx.send("This command can only be used in DMs.")
+
+
+target_user_id = 660714139026587651
+@client.event
+async def on_message(message):
+    if message.author.id == target_user_id:
+        await message.reply(f'你妈妈')
+    await client.process_commands(message)
 
 client.run(auth_token)
